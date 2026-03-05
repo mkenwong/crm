@@ -39,12 +39,12 @@ CRM/
 │   │   └── schema.prisma  # Database schema
 │   ├── .env.example       # Environment variable template (committed)
 │   ├── .env               # Local environment variables (git-ignored)
+│   ├── Dockerfile         # Backend production build
+│   ├── .dockerignore
 │   ├── tsconfig.json
 │   └── package.json
 │
-├── Dockerfile             # Multi-stage production build
 ├── docker-compose.yml     # Local dev services (PostgreSQL)
-├── .dockerignore
 └── README.md
 ```
 
@@ -143,19 +143,21 @@ The initial milestone is a welcome landing page that greets users when they firs
 - Basic reporting and dashboards
 - User authentication and role-based access
 
-## Docker Production Build
+## Docker Production Build (Backend)
 
-Build and run the full application as a single container:
+Build and run the backend as a container:
 
 ```bash
+cd server
+
 # Build the image
-docker build -t hardware-crm .
+docker build -t hardware-crm-server .
 
 # Run it (provide your production DATABASE_URL)
-docker run -p 3000:3000 -e DATABASE_URL="postgresql://user:pass@host:5432/hardware_crm" hardware-crm
+docker run -p 3000:3000 -e DATABASE_URL="postgresql://user:pass@host:5432/hardware_crm" hardware-crm-server
 ```
 
-The Dockerfile uses a multi-stage build: it compiles the React client and Express server separately, then produces a minimal production image that runs Prisma migrations on startup and serves the API + static frontend on port 3000.
+The Dockerfile uses a multi-stage build: it compiles the Express server and generates the Prisma client, then produces a minimal production image that runs migrations on startup and serves the API on port 3000.
 
 ## UI Approach
 
