@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import {
   Container,
   Title,
@@ -9,6 +10,8 @@ import {
   SimpleGrid,
   ThemeIcon,
   Badge,
+  Indicator,
+  Tooltip,
 } from "@mantine/core";
 import {
   IconUsers,
@@ -16,6 +19,7 @@ import {
   IconShoppingCart,
   IconChartBar,
 } from "@tabler/icons-react";
+import { API_URL } from "../config/env";
 
 const features = [
   {
@@ -44,7 +48,41 @@ const features = [
   },
 ];
 
+type ApiStatus = "checking" | "online" | "offline";
+
+function useApiStatus(intervalMs = 30_000): ApiStatus {
+  const [status, setStatus] = useState<ApiStatus>("checking");
+
+  useEffect(() => {
+    const check = async () => {
+      try {
+        const res = await fetch(`${API_URL}/api/health`, {
+          signal: AbortSignal.timeout(5_000),
+        });
+        setStatus(res.ok ? "online" : "offline");
+      } catch {
+        setStatus("offline");
+      }
+    };
+
+    check();
+    const id = setInterval(check, intervalMs);
+    return () => clearInterval(id);
+  }, [intervalMs]);
+
+  return status;
+}
+
+const statusConfig: Record<ApiStatus, { color: string; label: string }> = {
+  checking: { color: "gray", label: "Checking API..." },
+  online: { color: "teal", label: "API Online" },
+  offline: { color: "red", label: "API Offline" },
+};
+
 export function LandingPage() {
+  const apiStatus = useApiStatus();
+  const { color, label } = statusConfig[apiStatus];
+
   return (
     <div
       style={{
@@ -54,9 +92,24 @@ export function LandingPage() {
     >
       <Container size="lg" py={80}>
         <Stack align="center" gap="xl">
-          <Badge size="lg" variant="light" color="blue" radius="sm">
-            Hardware Factory CRM
-          </Badge>
+          <Group gap="sm">
+            <Badge size="lg" variant="light" color="blue" radius="sm">
+              Hardware Factory CRM
+            </Badge>
+            <Tooltip label={label}>
+              <Indicator
+                color={color}
+                size={10}
+                processing={apiStatus === "checking"}
+                position="middle-end"
+                offset={-2}
+              >
+                <Badge size="lg" variant="light" color={color} radius="sm">
+                  {label}
+                </Badge>
+              </Indicator>
+            </Tooltip>
+          </Group>
 
           <Title
             ta="center"

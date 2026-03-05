@@ -10,7 +10,7 @@ function getApiUrl(env: Environment): string {
     case "local":
       return "http://localhost:3000";
     case "production":
-      return "TODO";
+      return "https://crm-api-es9p.onrender.com";
   }
 }
 
